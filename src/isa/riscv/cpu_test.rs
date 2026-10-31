@@ -15,6 +15,66 @@ use crate::{
 };
 
 #[test]
+#[cfg(feature = "custom-instr")]
+fn test_custom_padd8_decode_and_exec() {
+    // 构造 padd8 x3, x1, x2 的机器码
+    // funct7=0, rs1=1, rs2=2, funct3=0, rd=3, opcode=0x0B
+    // 0000000_00010_00001_000_00011_0001011 = 0x0020818B
+    let raw_instr: u32 = 0x0020818B;
+
+    run_test_exec_decode(
+        raw_instr,
+        |builder| {
+            builder
+                .reg(1, 0x01020304) // rs1
+                .reg(2, 0x05060708) // rs2
+                .pc(0x80000000)
+        },
+        |checker| {
+            checker
+                .reg(3, 0x06080A0C) // rd
+                .pc(0x80000004) // 验证 PC 推进了 4 字节
+        },
+    );
+}
+
+#[test]
+#[cfg(feature = "custom-instr")]
+fn test_custom_psub8_decode_and_exec() {
+    let raw_instr: u32 = 0x0220818B;
+
+    run_test_exec_decode(
+        raw_instr,
+        |builder| builder.reg(1, 0x0A14FF01).reg(2, 0x05100A08).pc(0x80000000),
+        |checker| checker.reg(3, 0x0504F5F9).pc(0x80000004),
+    );
+}
+
+#[test]
+#[cfg(feature = "custom-instr")]
+fn test_custom_pminu8_decode_and_exec() {
+    let raw_instr: u32 = 0x0420818B;
+
+    run_test_exec_decode(
+        raw_instr,
+        |builder| builder.reg(1, 0x0A14FF01).reg(2, 0x05100A08).pc(0x80000000),
+        |checker| checker.reg(3, 0x05100A01).pc(0x80000004),
+    );
+}
+
+#[test]
+#[cfg(feature = "custom-instr")]
+fn test_custom_pmaxu8_decode_and_exec() {
+    let raw_instr: u32 = 0x0620818B;
+
+    run_test_exec_decode(
+        raw_instr,
+        |builder| builder.reg(1, 0x0A14FF01).reg(2, 0x05100A08).pc(0x80000000),
+        |checker| checker.reg(3, 0x0A14FF08).pc(0x80000004),
+    );
+}
+
+#[test]
 fn test_step_batch_executes_requested_cycles() {
     let mut cpu = TestCPUBuilder::new()
         .mem_base(0, 0x0000_0013_u32)

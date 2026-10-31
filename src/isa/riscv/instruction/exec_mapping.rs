@@ -19,6 +19,37 @@ use crate::{
     },
 };
 
+#[cfg(feature = "custom-instr")]
+fn exec_packed_u8(
+    info: RVInstrInfo,
+    cpu: &mut RVCPU,
+    name: &'static str,
+    lane_op: fn(WordType, WordType) -> WordType,
+) -> Result<(), Exception> {
+    if let RVInstrInfo::R { rd, rs1, rs2 } = info {
+        let lhs = cpu.reg_file.read(rs1, 0).0;
+        let rhs = cpu.reg_file.read(rs2, 0).0;
+        let mut result = 0;
+
+        for shift in (0..WordType::BITS).step_by(8) {
+            let lhs_lane = (lhs >> shift) & 0xff;
+            let rhs_lane = (rhs >> shift) & 0xff;
+            result |= (lane_op(lhs_lane, rhs_lane) & 0xff) << shift;
+        }
+
+        cpu.reg_file.write(rd, result);
+        log::info!(
+            "[Custom-Instr] Executed {}: rd={}, rs1={}, rs2={}",
+            name,
+            rd,
+            rs1,
+            rs2
+        );
+    }
+
+    super::normal_exec(cpu, |_| Ok(()))
+}
+
 pub(in crate::isa::riscv) fn get_exec_func(
     instr: RiscvInstr,
 ) -> fn(RVInstrInfo, &mut RVCPU) -> Result<(), Exception> {
@@ -316,7 +347,17 @@ pub(in crate::isa::riscv) fn get_exec_func(
         // RV_Custom
         //---------------------------------------
         #[cfg(feature = "custom-instr")]
-        RiscvInstr::MY_INSTR0_R => todo!(),
+        RiscvInstr::PADD8 => {
+            |info, cpu| exec_packed_u8(info, cpu, "PADD8", |a, b| a.wrapping_add(b))
+        }
+        #[cfg(feature = "custom-instr")]
+        RiscvInstr::PSUB8 => {
+            |info, cpu| exec_packed_u8(info, cpu, "PSUB8", |a, b| a.wrapping_sub(b))
+        }
+        #[cfg(feature = "custom-instr")]
+        RiscvInstr::PMINU8 => |info, cpu| exec_packed_u8(info, cpu, "PMINU8", |a, b| a.min(b)),
+        #[cfg(feature = "custom-instr")]
+        RiscvInstr::PMAXU8 => |info, cpu| exec_packed_u8(info, cpu, "PMAXU8", |a, b| a.max(b)),
         #[cfg(feature = "custom-instr")]
         RiscvInstr::MY_INSTR1_DISPLAY => |info, cpu| {
             if let RVInstrInfo::I { rs1: _, rd: _, imm } = info {

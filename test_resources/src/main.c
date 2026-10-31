@@ -1,3 +1,4 @@
+#include "custom_ops.h"
 #include "io.h"
 #include "log.h"
 #include "power.h"
@@ -26,6 +27,19 @@ void display_section_info() {
 int main() {
     TEST_START(__BASE_FILE__);
     display_section_info();
+
+    uint32_t a = 0x0A14FF01;
+    uint32_t b = 0x05100A08;
+    uint32_t add_res = padd8(a, b);
+    uint32_t sub_res = psub8(a, b);
+    uint32_t min_res = pminu8(a, b);
+    uint32_t max_res = pmaxu8(a, b);
+    printf("Custom packed-u8 finished!\n");
+    printf("PADD8:  %x\n", add_res);
+    printf("PSUB8:  %x\n", sub_res);
+    printf("PMINU8: %x\n", min_res);
+    printf("PMAXU8: %x\n", max_res);
+
     printf("Hello Qemu.\nformat test: %8d %08x %4o %c %s\n", 1ll, 255ll, 15, 'c', "test");
     Log(ERROR, "error test.");
     Log(WARN, "warnning test.");
