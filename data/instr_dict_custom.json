@@ -12,7 +12,6 @@
         "match": "0x0b",
         "mask": "0xfe00707f"
     },
-
     "my_instr1_display": {
         "encoding": "-----------------001-----0101011",
         "variable_fields": [
