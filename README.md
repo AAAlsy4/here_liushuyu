@@ -67,24 +67,24 @@ cargo run -- ./test_resources/bin/main.elf -g
 
 ### ch1
 
-The `snake` example is a freestanding RV64 program with no kernel, libc, or
-filesystem. It talks directly to the virt board's 16550 UART and uses the CLINT
-virtual clock to pace game updates.
 
 ```sh
 make -C ./test_resources bin/snake.elf
 cargo run --release -- ./test_resources/bin/snake.elf
 ```
 
-Use `WASD` or the arrow keys to steer, `P` to pause, `R` to restart, and `Q` to
-quit. The emulator remains in a 40x18 alternate terminal screen while the game
-is running and restores the previous screen on exit.
-
 ### ch2&3
 
 ```sh
-make
+make -C ./test_resources bin/main.elf
 cargo run --release --features custom-instr -- ./test_resources/bin/main.elf
+```
+
+### ch4
+
+```sh
+make -C ./test_resources bin/monitor.elf
+cargo run --release -- ./test_resources/bin/monitor.elf
 ```
 
 ### Useful Command-Line Options

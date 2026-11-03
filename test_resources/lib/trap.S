@@ -13,20 +13,28 @@
 __traps_entry:
     csrrw sp, mscratch, sp
     # now sp->kernel stack, mscratch->user stack
-    # allocate a TrapContext on kernel stack
+    # Allocate the frame on the dedicated M-mode trap stack.  The handler may
+    # return a different TrapContext, so the original frame address must not
+    # be derived from that replacement context.
     addi sp, sp, -34*8
     # save general-purpose registers
     sd x1, 1*8(sp)
     # skip sp(x2), we will save it later
     sd x3, 3*8(sp)
     # skip tp(x4), application does not use it
-    # save x5~x31
-    .set n, 5
-    .rept 27
+    # Save t0~t2 before using them as trap-entry temporaries.
+    sd x5, 5*8(sp)
+    sd x6, 6*8(sp)
+    sd x7, 7*8(sp)
+    la t0, __trap_frame_pointer
+    sd sp, 0(t0)
+    # save x8~x31
+    .set n, 8
+    .rept 24
         SAVE_REG %n
         .set n, n+1
     .endr
-    # we can use t0/t1/t2 freely, because they were saved on kernel stack
+    # t0/t1/t2 are now saved and may be used freely.
     csrr t0, mstatus
     csrr t1, mepc
     sd t0, 32*8(sp)
@@ -59,8 +67,16 @@ __traps_return:
         LOAD_REG %n
         .set n, n+1
     .endr
-    # release TrapContext on kernel stack
-    addi sp, sp, 34*8
-    # now sp->kernel stack, mscratch->user stack
-    csrrw sp, mscratch, sp
+    # Restore the original M-mode stack, even when a different task context
+    # was selected.  tp is intentionally not part of TrapContext.
+    la tp, __trap_frame_pointer
+    ld tp, 0(tp)
+    addi tp, tp, 34*8
+    csrrw sp, mscratch, tp
     mret
+
+.section .bss
+.align 3
+.globl __trap_frame_pointer
+__trap_frame_pointer:
+    .dword 0

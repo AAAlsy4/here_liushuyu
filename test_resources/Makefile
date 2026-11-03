@@ -14,6 +14,7 @@ RV_LDFLAG := -static -g
 RV_DUMP ?= $(ARCH)-elf-objdump
 RV_DUMPFLAG := -M no-aliases -S
 RV_OBJCOPY ?= $(ARCH)-elf-objcopy
+MONITOR_CFLAG := $(subst -march=rv64imfdvzicsr,-march=rv64imfd_zicsr,$(RV_CFLAG))
 
 # qemu
 QEMU ?= qemu-system-$(ARCH)
@@ -70,6 +71,18 @@ $(BIN)/%.elf: $(OBJ)/%.o $(LIBS_OBJ) linker.ld
 	@ $(call echo_cmd, $(RV_LD_PROMPT), $@)
 	$(Q) mkdir -p $(OBJ) $(BIN)
 	$(Q) $(RV_LD) $(RV_LDFLAG) -T linker.ld -o $@ $(filter %.o,$^)
+
+# The monitor has its own strong trap handler and task scheduler.  The weak
+# default handler remains linked for the other standalone examples.
+$(BIN)/monitor.elf: $(OBJ)/monitor.o $(LIBS_OBJ) linker.ld
+	@ $(call echo_cmd, $(RV_LD_PROMPT), $@)
+	$(Q) mkdir -p $(OBJ) $(BIN)
+	$(Q) $(RV_LD) $(RV_LDFLAG) -T linker.ld -o $@ $(filter %.o,$^)
+
+$(OBJ)/monitor.o: $(SRC)/monitor.c
+	@ $(call echo_cmd, $(RV_CC_PROMPT), $@)
+	$(Q) mkdir -p $(OBJ) $(BIN)
+	$(Q) $(RV_CC) $(MONITOR_CFLAG) -c $< -o $@
 	
 # default .c file
 $(OBJ)/%.o: $(SRC)/%.c

@@ -12,6 +12,7 @@ _Static_assert(sizeof(TrapContext) == 34 * sizeof(uint64_t),
 
 void __traps_entry();
 void __traps_return(TrapContext*);
+extern uint64_t __trap_frame_pointer;
 
 // RISC-V CSR 寄存器编号定义（根据特权架构规范）
 #define CSR_MSTATUS 0x300

@@ -41,4 +41,6 @@ void trap_init() {
     write_csr_mstatus(mstatus | 1 << 3);        // set MIE bit in mstatus
     write_csr_mtvec((uint64_t)(*__traps_entry));
     write_csr_mscratch((uint64_t)(TRAP_STACK + TRAP_STACK_SIZE));
+    __trap_frame_pointer =
+        (uint64_t)(TRAP_STACK + TRAP_STACK_SIZE - sizeof(TrapContext));
 }
