@@ -50,14 +50,40 @@ impl FromStr for DeviceConfig {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut parts = s.split(':');
-        let dev_type = match parts.next() {
-            Some("virtio-block") => VirtIODeviceEnum::VirtIOBlock,
-            Some("virtio-network") => VirtIODeviceEnum::VirtIONet,
-            Some(other) => return Err(format!("Unknown device type: {}", other)),
-            None => return Err("Invalid device arguments.".into()),
+        let (dev_type_name, path) = match s.split_once(':') {
+            Some((dev_type, path)) => (dev_type, Some(path)),
+            None => (s, None),
         };
-        let path = PathBuf::from(parts.next().ok_or("Need input a device path.")?);
+        let dev_type = match dev_type_name {
+            "virtio-block" => VirtIODeviceEnum::VirtIOBlock,
+            "virtio-network" => VirtIODeviceEnum::VirtIONet,
+            "virtio-rng" => VirtIODeviceEnum::VirtIORng,
+            other => return Err(format!("Unknown device type: {other}")),
+        };
+        let path = match dev_type {
+            VirtIODeviceEnum::VirtIORng => PathBuf::new(),
+            _ => PathBuf::from(path.ok_or("Need input a device path.")?),
+        };
         Ok(DeviceConfig { dev_type, path })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_virtio_rng_without_a_path() {
+        let config = "virtio-rng".parse::<DeviceConfig>().unwrap();
+        assert_eq!(config.dev_type, VirtIODeviceEnum::VirtIORng);
+        assert!(config.path.as_os_str().is_empty());
+    }
+
+    #[test]
+    fn block_device_still_requires_a_path() {
+        assert!("virtio-block".parse::<DeviceConfig>().is_err());
+        let config = "virtio-block:./disk.img".parse::<DeviceConfig>().unwrap();
+        assert_eq!(config.dev_type, VirtIODeviceEnum::VirtIOBlock);
+        assert_eq!(config.path, PathBuf::from("./disk.img"));
     }
 }

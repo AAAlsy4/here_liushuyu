@@ -40,6 +40,10 @@ impl VirtQueueDesc {
         (self.paddr - ram_config::BASE_ADDR as u64 + ram_base_raw as u64) as *mut T
     }
 
+    pub(crate) fn is_device_writable(&self) -> bool {
+        self.flags.contains(VirtQueueDescFlag::VIRTQ_DESC_F_WRITE)
+    }
+
     pub(crate) fn has_next(&self) -> bool {
         self.flags.contains(VirtQueueDescFlag::VIRTQ_DESC_F_NEXT)
     }

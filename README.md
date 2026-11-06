@@ -59,14 +59,13 @@ Test support for `riscv-arch-test` also exists, but it is not integrated into CI
 make -C ./test_resources
 
 # Run a simple program
-cargo run -- ./test_resources/bin/main.elf
+cargo run --release --features custom-instr ./test_resources/bin/main.elf
 
 # Run with debugger enabled
-cargo run -- ./test_resources/bin/main.elf -g
+cargo run --release --features custom-instr ./test_resources/bin/main.elf -g
 ```
 
 ### ch1
-
 
 ```sh
 make -C ./test_resources bin/snake.elf
@@ -85,6 +84,13 @@ cargo run --release --features custom-instr -- ./test_resources/bin/main.elf
 ```sh
 make -C ./test_resources bin/monitor.elf
 cargo run --release -- ./test_resources/bin/monitor.elf
+```
+
+### ch5
+
+```sh
+make -C ./test_resources bin/virtio_rng_test.elf
+cargo run -- ./test_resources/bin/virtio_rng_test.elf --device=virtio-rng --loglevel=error
 ```
 
 ### Useful Command-Line Options

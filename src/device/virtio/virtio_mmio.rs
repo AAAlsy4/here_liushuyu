@@ -16,6 +16,7 @@ use crate::{
 };
 
 pub const VIRTIO_DEVICE_ID_BLOCK: u16 = VirtIODeviceEnum::VirtIOBlock as u16;
+pub const VIRTIO_DEVICE_ID_RNG: u16 = VirtIODeviceEnum::VirtIORng as u16;
 const VIRTIO_MMIO_CONFIG_OFFSET: u64 = VirtIO_MMIO_Offset::Config as u64;
 const VIRTIO_MMIO_MAX_QUEUES: usize = 8;
 const FEATURE_SELECT_BITS: u32 = 32;

@@ -144,7 +144,7 @@ struct Args {
     )]
     log_level: LogLevel,
 
-    /// Attach a VirtIO block device; may be repeated. Format: virtio-block:PATH
+    /// Attach a VirtIO device; may be repeated. Format: virtio-block:PATH or virtio-rng
     #[arg(
         long = "device",
         value_name = "TYPE:PATH",
